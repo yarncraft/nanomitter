@@ -25,11 +25,7 @@ npm i nanomitter
 _master.ts_
 ```ts
 import { DistributedEventEmitter } from "nanomitter";
-
-type AnyJson = boolean | number | string | null | JsonArray | JsonMap;
-interface JsonMap { [key: string]: AnyJson; }
-interface JsonArray extends Array<AnyJson> { }
-type DistributedEvent = { topic?: string; data?: JsonMap; sender?: string; }
+import { DistributedEvent } from 'nanomitter/dist/src/types'
 
 (async () => {
   const emitter = await new DistributedEventEmitter().connect();
@@ -43,11 +39,7 @@ type DistributedEvent = { topic?: string; data?: JsonMap; sender?: string; }
 _worker.ts_
 ```ts
 import { DistributedEventEmitter } from "nanomitter";
-
-type AnyJson = boolean | number | string | null | JsonArray | JsonMap;
-interface JsonMap { [key: string]: AnyJson; }
-interface JsonArray extends Array<AnyJson> { }
-type DistributedEvent = { topic?: string; data?: JsonMap; sender?: string; }
+import { DistributedEvent } from 'nanomitter/dist/src/types'
 
 (async () => {
 	const emitter = await new DistributedEventEmitter().connect();
