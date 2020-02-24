@@ -1,3 +1,4 @@
+
 <div align="center">
 <h1> DistributedEventEmitter </h1>
 
@@ -12,6 +13,61 @@ In order to realize this in the cloud, one could opt for a Docker Overlay Networ
 
 The implementation is realized with the _NanoMsg framework_ (also called: Scalability Protocols).
 I was inspired by the creator of the framework itself, who described how to realize an efficient broadcasting setup through the use of a **bus socket**: [http://250bpm.com/blog:17](http://250bpm.com/blog:17)
+
+## Quickstart
+
+<a href="https://badge.fury.io/js/nanomitter"><img src="https://badge.fury.io/js/nanomitter.svg" alt="npm version" height="18"></a>
+
+```sh
+npm i nanomitter
+```
+
+_master.ts_
+```ts
+import { DistributedEventEmitter } from "nanomitter";
+
+type AnyJson = boolean | number | string | null | JsonArray | JsonMap;
+interface JsonMap { [key: string]: AnyJson; }
+interface JsonArray extends Array<AnyJson> { }
+type DistributedEvent = { topic?: string; data?: JsonMap; sender?: string; }
+
+(async () => {
+  const emitter = await new DistributedEventEmitter().connect();
+  const logger = (msg: DistributedEvent) => console.log("Broadcasted message from: " + msg.sender);
+  emitter.on("*", logger);
+})().catch(err => {
+  console.error(err);
+});
+```
+
+_worker.ts_
+```ts
+import { DistributedEventEmitter } from "nanomitter";
+
+type AnyJson = boolean | number | string | null | JsonArray | JsonMap;
+interface JsonMap { [key: string]: AnyJson; }
+interface JsonArray extends Array<AnyJson> { }
+type DistributedEvent = { topic?: string; data?: JsonMap; sender?: string; }
+
+(async () => {
+	const emitter = await new DistributedEventEmitter().connect();
+	const logger = (msg: DistributedEvent) => console.log(msg);
+
+	emitter.on("stockprice", logger);
+
+	setInterval(
+		() =>
+			emitter.emit({
+				topic: "stockprice",
+				data: { ticker: "AAPL", price: 250 + Math.random() * 10 }
+			}),
+		300
+	);
+
+})().catch(err => {
+	console.error(err);
+});
+```
 
 ## API
 
