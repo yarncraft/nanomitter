@@ -1,0 +1,23 @@
+{
+	"name": "distributedeventemitter",
+	"version": "1.0.0",
+	"description": "A distributed EventEmitter built with the Scalability Protocols",
+	"main": "dist/src/index.js",
+	"types": "dist/src/index.d.ts",
+	"scripts": {
+		"compile": "tsc",
+		"start-master": "node dist/examples/master.js",
+		"start-workers": "node dist/examples/worker.js & node dist/examples/worker.js & node dist/examples/worker.js"
+	},
+	"author": "yarncraft",
+	"license": "MIT",
+	"dependencies": {
+		"@types/msgpack-lite": "^0.1.7",
+		"@types/nanoid": "^2.1.0",
+		"@types/nanomsg": "^3.2.2",
+		"@types/node": "^13.7.4",
+		"msgpack-lite": "^0.1.26",
+		"nanoid": "^2.1.11",
+		"nanomsg": "^4.1.0"
+	}
+}

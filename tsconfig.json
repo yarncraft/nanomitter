@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+		"noImplicitAny": true,
+		"removeComments": true,
+		"preserveConstEnums": true,
+		"sourceMap": true,
+		"outDir": "dist",
+		"esModuleInterop": true,
+		"declaration": true
+	},
+	"include": ["src/**/*", "examples/**/*"],
+	"exclude": ["node_modules", "**/*.spec.ts"]
+}
