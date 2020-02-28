@@ -29,8 +29,8 @@ import { DistributedEvent } from "nanomitter/dist/src/types";
 
 (async () => {
 	const emitter = await new DistributedEventEmitter().connect();
-	const logger = (msg: DistributedEvent) =>
-		console.log("Broadcasted message from: " + msg.sender);
+	const logger = ({ topic, data }: DistributedEvent) =>
+		console.log(`Broadcasted ${topic} ${JSON.stringify(data)}`);
 	emitter.on("*", logger);
 })().catch(err => {
 	console.error(err);
