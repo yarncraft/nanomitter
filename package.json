@@ -1,13 +1,13 @@
 {
-	"name": "distributedeventemitter",
+	"name": "nanomitter",
 	"version": "1.0.0",
-	"description": "A distributed EventEmitter built with the Scalability Protocols",
+	"description": "A distributed EventEmitter built with NanoMsg (Scalability Protocols)",
 	"main": "dist/src/index.js",
 	"types": "dist/src/index.d.ts",
 	"scripts": {
 		"compile": "tsc",
 		"start-master": "node dist/examples/master.js",
-		"start-workers": "node dist/examples/worker.js & node dist/examples/worker.js & node dist/examples/worker.js"
+		"start-workers": "node dist/examples/worker.js"
 	},
 	"author": "yarncraft",
 	"license": "MIT",
@@ -19,5 +19,21 @@
 		"msgpack-lite": "^0.1.26",
 		"nanoid": "^2.1.11",
 		"nanomsg": "^4.1.0"
-	}
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/yarncraft/DistributedEventEmitter.git"
+	},
+	"keywords": [
+		"eventemitter",
+		"npm",
+		"package",
+		"sockets",
+		"pubsub",
+		"microservices",
+		"servicebus",
+		"distributed",
+		"messaging",
+		"typescript"
+	]
 }

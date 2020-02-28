@@ -4,60 +4,82 @@ import nano from "nanomsg";
 
 import { DistributedEvent, EventListener } from './types'
 
+type InternalDistributedEvent = { topic: string; data: any; sender: string; fromLeader: boolean, bus: number }
+
 const delay = (ms: number) => new Promise(_ => setTimeout(_, ms));
 
 export class DistributedEventEmitter {
 	id: string;
 	bus: nano.Socket;
 	leader: boolean;
+	partitions: Array<nano.Socket>;
+	partitionsAmount: number;
 	listeners: Map<string, { cont: Array<EventListener>, once: Array<EventListener> }>;
 	addr: string;
 
 	constructor() {
 		this.id = nanoid();
-		this.bus = nano.socket("bus");
+		this.partitions = [];
+		this.partitionsAmount = 0
 		this.leader = false;
 		this.listeners = new Map();
 	}
 
+	addBus() {
+		let newAddr = `tcp://127.0.0.1:55556`
+		let newBus = nano.socket("bus");
+		newBus.bind(newAddr)
+		this.partitionsAmount = this.partitions.push(newBus)
+
+		delay(300).then(_ => {
+			this.leader = true;
+			this._startBroadcast();
+			const msg: InternalDistributedEvent = { topic: "DEE-BusAdded", data: { addr: newAddr }, sender: this.id, fromLeader: true, bus: 0 }
+			var buffer = msgpack.encode(msg);
+			this.bus.send(buffer)
+		})
+	}
+
 	async connect(addr: string = 'tcp://127.0.0.1:55555') {
+		this.addr = addr
+		this.bus = nano.socket("bus");
 		try {
-			this.addr = addr
-			this.bus.bind(this.addr);
+			this.bus.bind(addr)
+			this.partitionsAmount = this.partitions.push(this.bus)
 			await delay(300)
 			this.leader = true;
+			this._startBroadcast();
 		} catch (error) {
-			this.bus.connect(this.addr);
+			this.bus.connect(addr)
+			this.partitionsAmount = this.partitions.push(this.bus)
 			await delay(300)
 		}
-		if (this.leader === true) this._startBroadcast();
 		this._startListening();
 		return this
 	}
 
 	private _startBroadcast() {
 		this.bus.on("data", (buffer: Buffer) => {
-			this.bus.send(buffer)
-			console.log("test")
+			const msg: InternalDistributedEvent = msgpack.decode(buffer);
+			if (msg.fromLeader === false) this.bus.send(buffer)
 		}
-
 		);
 	}
 
 	private _startListening() {
-		this.bus.on("data", (buffer: Buffer) => {
-			const msg: DistributedEvent = msgpack.decode(buffer);
-			const topic = msg.topic;
-			if (msg.sender === this.id) return;
+		this.bus.on("data", async (buffer: Buffer) => {
+			const { topic, data, sender }: InternalDistributedEvent = msgpack.decode(buffer);
+			if (sender === this.id) return;
+			else if (topic === "DEE-BusAdded" && this.leader === false) { await this.connect(data.addr) }
 			else {
 				if (topic !== "*" && this.listeners.has(topic)) {
-					this._getContListeners(topic).map((f: EventListener) => f(msg));
-					this._getOnceListeners(topic).map((f: EventListener) => f(msg));
+					this._getContListeners(topic).map((f: EventListener) => f({ topic, data }));
+					this._getOnceListeners(topic).map((f: EventListener) => f({ topic, data }));
 					this._removeAllOnceListeners(topic);
 				}
 				if (this.listeners.has("*")) {
-					this.listeners.get("*").cont.map((f: EventListener) => f(msg));
-					this.listeners.get("*").once.map((f: EventListener) => f(msg));
+					this.listeners.get("*").cont.map((f: EventListener) => f({ topic, data }));
+					this.listeners.get("*").once.map((f: EventListener) => f({ topic, data }));
 					this._removeAllOnceListeners("*");
 				}
 			}
@@ -104,9 +126,12 @@ export class DistributedEventEmitter {
 	}
 
 	emit(msg: DistributedEvent) {
-		msg.sender = this.id;
-		var buffer = msgpack.encode(msg);
-		this.bus.send(buffer)
+		let randomBusIdx = Math.floor(Math.random() * this.partitionsAmount)
+		let bus = this.partitions[randomBusIdx]
+
+		let internalMsg: InternalDistributedEvent = { ...msg, fromLeader: this.leader, sender: this.id, bus: randomBusIdx }
+		var buffer = msgpack.encode(internalMsg);
+		bus.send(buffer)
 	}
 
 	addListener(topic: string, f: EventListener) {

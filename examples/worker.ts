@@ -7,13 +7,17 @@ import { DistributedEvent } from '../src/types';
 
 	emitter.on("stockprice", logger);
 
+	await new Promise(done => setTimeout(() => done(), 5000));
+
+	emitter.addBus()
+
 	setInterval(
 		() =>
 			emitter.emit({
 				topic: "stockprice",
 				data: { ticker: "AAPL", price: 250 + Math.random() * 10 }
 			}),
-		300
+		5000
 	);
 
 })().catch(err => {
