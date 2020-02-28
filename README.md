@@ -64,27 +64,36 @@ import { DistributedEvent } from "nanomitter/dist/src/types";
 
 ## API
 
-_The API method naming is very similar to the conventional EventEmitter methods:_
+- **async connect(addr)**
+> In order to realise a distributed setup, a developer first has to connect the EventEmitter to a given address (default: 'tcp://127.0.0.1:55555'). _The first Emitter that connects to a given address binds the port and acts as the master, meaning that he is responsible for the broadcasting._ The master itself can send and receive messages just like its clients.
+
+
+_The remaining API methods are very similar to the conventional EventEmitter methods:_
 
 - **addListener(topic, eventlistener)**
 
 > Adds a listener at the end of the listeners array for the specified topic. No checks are made to see if the listener has already been added. Multiple calls passing the same combination of event and listener will result in the listener being added multiple times. Returns emitter, so calls can be chained.
 
+
 - **on(topic, eventlistener)**
 
 > Adds a listener at the end of the listeners array for the specified topic. No checks are made to see if the listener has already been added. Multiple calls passing the same combination of event and listener will result in the listener being added multiple times. Returns emitter, so calls can be chained.
+
 
 - **once(topic, eventlistener)**
 
 > Adds a one time listener to the topic. This listener is invoked only the next time the event is fired, after which it is removed. Returns emitter, so calls can be chained.
 
+
 - **removeListener(topic, eventlistener)**
 
 > Removes a listener from the listener array for the specified topic. Caution − RemoveListener will remove, at most, one instance of a listener from the listener array. If any single listener has been added multiple times to the listener array for the specified topic, then removeListener must be called multiple times to remove each instance. Returns emitter, so calls can be chained.
 
+
 - **removeAllListeners(topic?)**
 
 > Removes all listeners, or those of the specified topic. It's not a good idea to remove listeners that were added elsewhere in the code, especially when it's on an emitter that you didn't create (e.g. sockets or file streams). Returns emitter, so calls can be chained.
+
 
 ## Types
 
