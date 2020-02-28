@@ -5,6 +5,7 @@ import nano from "nanomsg";
 import { DistributedEvent, EventListener } from './types'
 
 const delay = (ms: number) => new Promise(_ => setTimeout(_, ms));
+type InternalDistributedEvent = { topic: string; data: any; sender: string; fromLeader: boolean }
 
 export class DistributedEventEmitter {
 	id: string;
@@ -36,28 +37,22 @@ export class DistributedEventEmitter {
 	}
 
 	private _startBroadcast() {
-		this.bus.on("data", (buffer: Buffer) => {
-			this.bus.send(buffer)
-			console.log("test")
-		}
-
-		);
+		this.bus.on("data", (buffer: Buffer) => this.bus.send(buffer));
 	}
 
 	private _startListening() {
 		this.bus.on("data", (buffer: Buffer) => {
-			const msg: DistributedEvent = msgpack.decode(buffer);
-			const topic = msg.topic;
-			if (msg.sender === this.id) return;
+			const { topic, data, sender }: InternalDistributedEvent = msgpack.decode(buffer);
+			if (sender === this.id) return;
 			else {
 				if (topic !== "*" && this.listeners.has(topic)) {
-					this._getContListeners(topic).map((f: EventListener) => f(msg));
-					this._getOnceListeners(topic).map((f: EventListener) => f(msg));
+					this._getContListeners(topic).map((f: EventListener) => f({ topic, data }));
+					this._getOnceListeners(topic).map((f: EventListener) => f({ topic, data }));
 					this._removeAllOnceListeners(topic);
 				}
 				if (this.listeners.has("*")) {
-					this.listeners.get("*").cont.map((f: EventListener) => f(msg));
-					this.listeners.get("*").once.map((f: EventListener) => f(msg));
+					this.listeners.get("*").cont.map((f: EventListener) => f({ topic, data }));
+					this.listeners.get("*").once.map((f: EventListener) => f({ topic, data }));
 					this._removeAllOnceListeners("*");
 				}
 			}
@@ -104,8 +99,8 @@ export class DistributedEventEmitter {
 	}
 
 	emit(msg: DistributedEvent) {
-		msg.sender = this.id;
-		var buffer = msgpack.encode(msg);
+		let internalMsg: InternalDistributedEvent = { ...msg, fromLeader: this.leader, sender: this.id }
+		var buffer = msgpack.encode(internalMsg);
 		this.bus.send(buffer)
 	}
 

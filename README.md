@@ -1,4 +1,3 @@
-
 <div align="center">
 <h1> DistributedEventEmitter </h1>
 
@@ -23,23 +22,26 @@ npm i nanomitter
 ```
 
 _master.ts_
+
 ```ts
 import { DistributedEventEmitter } from "nanomitter";
-import { DistributedEvent } from 'nanomitter/dist/src/types'
+import { DistributedEvent } from "nanomitter/dist/src/types";
 
 (async () => {
-  const emitter = await new DistributedEventEmitter().connect();
-  const logger = (msg: DistributedEvent) => console.log("Broadcasted message from: " + msg.sender);
-  emitter.on("*", logger);
+	const emitter = await new DistributedEventEmitter().connect();
+	const logger = (msg: DistributedEvent) =>
+		console.log("Broadcasted message from: " + msg.sender);
+	emitter.on("*", logger);
 })().catch(err => {
-  console.error(err);
+	console.error(err);
 });
 ```
 
 _worker.ts_
+
 ```ts
 import { DistributedEventEmitter } from "nanomitter";
-import { DistributedEvent } from 'nanomitter/dist/src/types'
+import { DistributedEvent } from "nanomitter/dist/src/types";
 
 (async () => {
 	const emitter = await new DistributedEventEmitter().connect();
@@ -55,7 +57,6 @@ import { DistributedEvent } from 'nanomitter/dist/src/types'
 			}),
 		300
 	);
-
 })().catch(err => {
 	console.error(err);
 });
@@ -90,16 +91,6 @@ _The API method naming is very similar to the conventional EventEmitter methods:
 _The DistributedEvent type is still under consideration and can be subject to change._
 
 ```typescript
-type AnyJson = boolean | number | string | null | JsonArray | JsonMap;
-export interface JsonMap {
-	[key: string]: AnyJson;
-}
-export interface JsonArray extends Array<AnyJson> {}
-
-export type DistributedEvent = {
-	topic?: string;
-	data?: JsonMap;
-	sender?: string;
-};
+export type DistributedEvent = { topic: string; data: any };
 export type EventListener = (msg: DistributedEvent) => void;
 ```
