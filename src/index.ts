@@ -1,11 +1,13 @@
 import msgpack from "msgpack-lite";
 import nanoid from "nanoid";
-import nano from "nanomsg";
+import * as nano from "nanomsg";
 
-import { DistributedEvent, EventListener } from './types'
+
+type InternalDistributedEvent = { topic: string; data: any; sender: string; fromLeader: boolean }
+export type DistributedEvent = { topic: string; data: any; }
+export type EventListener = (msg: DistributedEvent) => void
 
 const delay = (ms: number) => new Promise(_ => setTimeout(_, ms));
-type InternalDistributedEvent = { topic: string; data: any; sender: string; fromLeader: boolean }
 
 export class DistributedEventEmitter {
 	id: string;
@@ -13,12 +15,16 @@ export class DistributedEventEmitter {
 	leader: boolean;
 	listeners: Map<string, { cont: Array<EventListener>, once: Array<EventListener> }>;
 	addr: string;
+	heartbeatInterval: number;
+	service: string
 
-	constructor() {
+	constructor(service = "", heartbeatInterval = 60000) {
 		this.id = nanoid();
 		this.bus = nano.socket("bus");
 		this.leader = false;
 		this.listeners = new Map();
+		this.heartbeatInterval = heartbeatInterval;
+		this.service = service;
 	}
 
 	async connect(addr: string = 'tcp://127.0.0.1:55555') {
@@ -32,8 +38,20 @@ export class DistributedEventEmitter {
 			await delay(300)
 		}
 		if (this.leader === true) this._startBroadcast();
+		this._startHeartbeat();
+
+
 		this._startListening();
 		return this
+	}
+
+	private _startHeartbeat() {
+		const heartbeat = () => {
+			this.emit({ topic: "<3", data: { service: this.service } })
+			setTimeout(heartbeat, this.heartbeatInterval);
+		}
+
+		setTimeout(heartbeat, this.heartbeatInterval);
 	}
 
 	private _startBroadcast() {
@@ -99,8 +117,8 @@ export class DistributedEventEmitter {
 	}
 
 	emit(msg: DistributedEvent) {
-		let internalMsg: InternalDistributedEvent = { ...msg, fromLeader: this.leader, sender: this.id }
-		var buffer = msgpack.encode(internalMsg);
+		const internalMsg: InternalDistributedEvent = { ...msg, fromLeader: this.leader, sender: this.id }
+		const buffer = msgpack.encode(internalMsg);
 		this.bus.send(buffer)
 	}
 

@@ -1,13 +1,11 @@
 {
 	"name": "nanomitter",
-	"version": "1.1.0",
+	"version": "1.2.2",
 	"description": "A distributed EventEmitter built with NanoMsg (Scalability Protocols)",
-	"main": "dist/src/index.js",
-	"types": "dist/src/index.d.ts",
+	"main": "./index.js",
+	"types": "./index.d.ts",
 	"scripts": {
-		"compile": "tsc",
-		"start-master": "node dist/examples/master.js",
-		"start-workers": "node dist/examples/worker.js & node dist/examples/worker.js"
+		"prepublish": "tsc"
 	},
 	"author": "yarncraft",
 	"license": "MIT",
